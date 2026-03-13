@@ -114,6 +114,16 @@ td{padding:9px 12px;border-bottom:1px solid rgba(42,61,52,.5);color:var(--text2)
 tr:hover td{background:rgba(61,220,132,.03);color:var(--text)}
 .td-name{color:var(--text);font-weight:600}
 .confidence-chip{font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;font-weight:600}
+.src-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;font-weight:600;white-space:nowrap}
+.src-osm{background:rgba(126,211,33,.12);color:#7ed321;border:1px solid rgba(126,211,33,.3)}
+.src-wiki{background:rgba(74,144,226,.12);color:#4a90e2;border:1px solid rgba(74,144,226,.3)}
+.src-wikidata{background:rgba(144,74,226,.12);color:#9050e2;border:1px solid rgba(144,74,226,.3)}
+.src-os{background:rgba(255,59,48,.12);color:#ff3b30;border:1px solid rgba(255,59,48,.3)}
+.src-nps{background:rgba(255,149,0,.12);color:#ff9500;border:1px solid rgba(255,149,0,.3)}
+.src-doc{background:rgba(52,199,89,.12);color:#34c759;border:1px solid rgba(52,199,89,.3)}
+.src-natura{background:rgba(90,200,250,.12);color:#5ac8fa;border:1px solid rgba(90,200,250,.3)}
+.src-govt{background:rgba(255,204,0,.12);color:#ffcc00;border:1px solid rgba(255,204,0,.3)}
+.src-default{background:rgba(142,142,147,.12);color:#8e8e93;border:1px solid rgba(142,142,147,.3)}
 .conf-high{background:rgba(61,220,132,.12);color:var(--accent)}
 .conf-med{background:rgba(255,179,71,.12);color:var(--warn)}
 .conf-low{background:rgba(255,69,69,.1);color:var(--danger)}
@@ -488,6 +498,7 @@ function handleMessage(msg) {
     if (['osm','wikidata','wikipedia','country'].includes(stage)) sourcesUsed.add(stage);
   }
   else if (msg.type === 'results') {
+    (msg.data || []).forEach(r => { if (r.source) sourcesUsed.add(r.source); });
     results.push(...(msg.data || []));
     renderTableRows(msg.data || []);
     updateStats();
@@ -529,6 +540,39 @@ function renderTable() {
   renderTableRows(results);
 }
 
+
+function getSourceBadge(source) {
+  if (!source) return '<span class="src-badge src-default">—</span>';
+  const s = source.toLowerCase();
+  if (s.includes('ordnance') || s.includes('os names')) 
+    return '<span class="src-badge src-os">🇬🇧 OS Names</span>';
+  if (s.includes('nps') || s.includes('national park service'))
+    return '<span class="src-badge src-nps">🇺🇸 NPS</span>';
+  if (s.includes('usgs'))
+    return '<span class="src-badge src-nps">🇺🇸 USGS</span>';
+  if (s.includes('doc (new zealand)') || s.includes('doc api'))
+    return '<span class="src-badge src-doc">🇳🇿 DOC</span>';
+  if (s.includes('natura') || s.includes('eea'))
+    return '<span class="src-badge src-natura">🇪🇺 Natura2000</span>';
+  if (s.includes('geodata.gov.gr') || s.includes('greek ministry'))
+    return '<span class="src-badge src-natura">🇬🇷 GR Govt</span>';
+  if (s.includes('data.gouv') || s.includes('france'))
+    return '<span class="src-badge src-govt">🇫🇷 data.gouv</span>';
+  if (s.includes('australia') || s.includes('data.gov.au'))
+    return '<span class="src-badge src-govt">🇦🇺 AU Govt</span>';
+  if (s.includes('data.gov.in') || s.includes('india'))
+    return '<span class="src-badge src-govt">🇮🇳 IN Govt</span>';
+  if (s.includes('japan') || s.includes('gsi'))
+    return '<span class="src-badge src-govt">🇯🇵 GSI</span>';
+  if (s.includes('openstreetmap') || s === 'osm')
+    return '<span class="src-badge src-osm">● OSM</span>';
+  if (s.includes('wikidata'))
+    return '<span class="src-badge src-wikidata">◆ Wikidata</span>';
+  if (s.includes('wikipedia'))
+    return '<span class="src-badge src-wiki">◈ Wikipedia</span>';
+  return `<span class="src-badge src-default">${source.slice(0,18)}</span>`;
+}
+
 function renderTableRows(rows) {
   const tbody = document.getElementById('tableBody');
   // Remove empty state if present
@@ -550,7 +594,7 @@ function renderTableRows(rows) {
       <td>${r.country||'—'}</td>
       <td title="${r.description||''}">${r.description?r.description.slice(0,60)+'...':'—'}</td>
       <td>${r.wikipedia?`<a href="${r.wikipedia}" target="_blank" style="color:var(--accent2);font-size:11px">↗ Wiki</a>`:'—'}</td>
-      <td style="font-size:11px">${r.source||''}</td>
+      <td>${getSourceBadge(r.source)}</td>
       <td><span class="confidence-chip ${confClass(r.confidence||'Low')}">${r.confidence||'Low'}</span></td>`;
     tbody.appendChild(tr);
   });
