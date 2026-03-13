@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root {
   --bg:#0a0f0d;--bg2:#111a16;--bg3:#1a2820;--border:#2a3d34;
@@ -134,6 +136,22 @@ tr:hover td{background:rgba(61,220,132,.03);color:var(--text)}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.stats-bar{grid-template-columns:repeat(2,1fr)}}
+
+.map-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:0}
+.map-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.map-header h3{font-size:13px;font-weight:700}
+#map{height:380px;width:100%;background:var(--bg2)}
+.leaflet-popup-content-wrapper{background:var(--card)!important;border:1px solid var(--border)!important;color:var(--text)!important;border-radius:10px!important;box-shadow:0 8px 32px rgba(0,0,0,.5)!important}
+.leaflet-popup-tip{background:var(--card)!important}
+.leaflet-popup-content{margin:10px 14px!important;font-family:'Syne',sans-serif}
+.popup-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.popup-type{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--accent);margin-bottom:6px}
+.popup-detail{font-size:11px;color:var(--text2);line-height:1.6}
+.popup-wiki{color:var(--accent2);font-size:11px;text-decoration:none}
+.map-badge{font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+.leaflet-control-zoom a{background:var(--card)!important;color:var(--text)!important;border-color:var(--border)!important}
+.leaflet-control-zoom a:hover{background:var(--bg3)!important}
+tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!important}
 </style>
 </head>
 <body>
@@ -246,6 +264,17 @@ tr:hover td{background:rgba(61,220,132,.03);color:var(--text)}
         <div class="log-area" id="logArea"></div>
       </div>
 
+      <div class="map-panel">
+        <div class="map-header">
+          <h3>🗺️ Map <span class="map-badge" id="mapBadge">0 markers</span></h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:11px;color:var(--text3)">Click marker for details</span>
+            <button onclick="fitMapToMarkers()" style="padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer;font-family:'Syne',sans-serif">Fit All</button>
+          </div>
+        </div>
+        <div id="map"></div>
+      </div>
+
       <div class="table-panel">
         <div class="table-header">
           <h3>Results <span style="color:var(--text3);font-size:12px;font-weight:400" id="tableCount"></span></h3>
@@ -303,12 +332,165 @@ let abortController = null;
 let suggestTimer = null;
 let sourcesUsed = new Set();
 
+
+// ── MAP ───────────────────────────────────────────────────────────────────────
+let map = null;
+let markersLayer = null;
+let radiusCircle = null;
+let centerMarker = null;
+
+const TYPE_ICONS = {
+  waterfall:'💧', peak:'⛰️', hiking:'🥾', camp:'⛺', cave:'🦇',
+  lake:'🏞️', forest:'🌲', national_park:'🌲', nature_reserve:'🌿',
+  viewpoint:'👁️', beach:'🏖️', hot_spring:'♨️', glacier:'🧊',
+  volcano:'🌋', river:'💧', mtb:'🚵', motorbiking:'🏍️', default:'📍'
+};
+
+function getTypeIcon(type) {
+  if (!type) return '📍';
+  const t = type.toLowerCase().replace(/\s+/g,'_').replace(/\//g,'_');
+  for (const [k,v] of Object.entries(TYPE_ICONS)) {
+    if (t.includes(k)) return v;
+  }
+  return '📍';
+}
+
+function makeMarkerIcon(type, source) {
+  const emoji = getTypeIcon(type);
+  const s = (source||'').toLowerCase();
+  let borderColor = '#3ddc84'; // default green
+  if (s.includes('ordnance') || s.includes('os names')) borderColor = '#ff3b30';
+  else if (s.includes('nps') || s.includes('usgs')) borderColor = '#ff9500';
+  else if (s.includes('doc')) borderColor = '#34c759';
+  else if (s.includes('natura') || s.includes('eea') || s.includes('greek')) borderColor = '#5ac8fa';
+  else if (s.includes('data.gouv') || s.includes('data.gov')) borderColor = '#ffcc00';
+  else if (s.includes('wikidata')) borderColor = '#9050e2';
+  else if (s.includes('wikipedia')) borderColor = '#4a90e2';
+
+  return L.divIcon({
+    className: '',
+    html: `<div style="background:var(--card,#131e19);border:2px solid ${borderColor};border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)">${emoji}</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -16],
+  });
+}
+
+function initMap() {
+  if (map) return;
+  map = L.map('map', {
+    center: [20, 0],
+    zoom: 2,
+    zoomControl: true,
+    attributionControl: false,
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+}
+
+function updateMapCenter() {
+  if (!map || !selectedPlace) return;
+  const lat = parseFloat(selectedPlace.lat);
+  const lng = parseFloat(selectedPlace.lon);
+  const radius = parseInt(document.getElementById('radiusSlider').value);
+
+  // Remove old circle and center marker
+  if (radiusCircle) map.removeLayer(radiusCircle);
+  if (centerMarker) map.removeLayer(centerMarker);
+
+  // Draw radius circle
+  radiusCircle = L.circle([lat, lng], {
+    radius: radius * 1000,
+    color: '#3ddc84',
+    fillColor: '#3ddc84',
+    fillOpacity: 0.06,
+    weight: 1.5,
+    dashArray: '6,4',
+  }).addTo(map);
+
+  // Center pin
+  centerMarker = L.marker([lat, lng], {
+    icon: L.divIcon({
+      className: '',
+      html: `<div style="background:#3ddc84;border-radius:50%;width:10px;height:10px;border:2px solid #fff;box-shadow:0 0 8px #3ddc84"></div>`,
+      iconSize: [10,10],
+      iconAnchor: [5,5],
+    })
+  }).addTo(map);
+
+  map.fitBounds(radiusCircle.getBounds(), { padding: [20,20] });
+}
+
+function addMarkersToMap(rows) {
+  if (!map) return;
+  rows.forEach((r, idx) => {
+    if (!r.lat || !r.lng) return;
+    const lat = parseFloat(r.lat);
+    const lng = parseFloat(r.lng);
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    const marker = L.marker([lat, lng], { icon: makeMarkerIcon(r.type, r.source) });
+    const wikiLink = r.wikipedia ? `<br><a href="${r.wikipedia}" target="_blank" class="popup-wiki">↗ Wikipedia</a>` : '';
+    const desc = r.description ? `<div class="popup-detail">${r.description.slice(0,120)}${r.description.length>120?'…':''}</div>` : '';
+    const srcBadge = getSourceBadge(r.source);
+
+    marker.bindPopup(`
+      <div class="popup-name">${r.name || 'Unnamed'}</div>
+      <div class="popup-type">${r.type||''} ${srcBadge}</div>
+      ${desc}
+      <div class="popup-detail" style="margin-top:4px">
+        ${r.elevation ? '⬆ ' + r.elevation + '&nbsp;&nbsp;' : ''}
+        ${r.region ? '📍 ' + r.region : ''}
+        ${wikiLink}
+      </div>
+    `, { maxWidth: 240 });
+
+    // Click on marker → highlight row in table
+    marker.on('click', () => {
+      highlightRow(idx);
+    });
+
+    markersLayer.addLayer(marker);
+  });
+
+  document.getElementById('mapBadge').textContent = markersLayer.getLayers().length + ' markers';
+}
+
+function highlightRow(idx) {
+  // Remove existing highlight
+  document.querySelectorAll('tr.highlighted').forEach(r => r.classList.remove('highlighted'));
+  // Find and highlight matching row
+  const tbody = document.getElementById('tableBody');
+  const rows = tbody.querySelectorAll('tr');
+  if (rows[idx]) {
+    rows[idx].classList.add('highlighted');
+    rows[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function fitMapToMarkers() {
+  if (!map || !markersLayer.getLayers().length) return;
+  const group = L.featureGroup(markersLayer.getLayers());
+  map.fitBounds(group.getBounds(), { padding: [30,30] });
+}
+
+function clearMapMarkers() {
+  if (markersLayer) markersLayer.clearLayers();
+  if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+  if (centerMarker) { map.removeLayer(centerMarker); centerMarker = null; }
+  document.getElementById('mapBadge').textContent = '0 markers';
+}
+
 // ── Init
 function init() {
   renderChips();
   document.getElementById('radiusSlider').addEventListener('input', e => {
     document.getElementById('radiusVal').textContent = e.target.value + ' km';
+    updateMapCenter();
   });
+  initMap();
   setupSearch();
   // Load saved API URL
   const saved = localStorage.getItem('wilddata_api_url');
@@ -406,6 +588,7 @@ function selectPlace(place) {
   document.getElementById('strategyBadge').textContent = strategy;
   document.getElementById('strategyBadge').className = 'strategy-badge ' + cls;
   document.getElementById('countryChip').classList.add('show');
+  updateMapCenter();
 }
 
 function getFlagEmoji(cc) {
@@ -427,6 +610,8 @@ async function startExtraction() {
   document.getElementById('progressPanel').classList.add('show');
   document.getElementById('progressTitle').textContent = 'Extracting...';
   document.getElementById('tableBody').innerHTML = '';
+  clearMapMarkers();
+  updateMapCenter();
   updateStats();
 
   const params = new URLSearchParams({
@@ -501,6 +686,7 @@ function handleMessage(msg) {
     (msg.data || []).forEach(r => { if (r.source) sourcesUsed.add(r.source); });
     results.push(...(msg.data || []));
     renderTableRows(msg.data || []);
+    addMarkersToMap(msg.data || []);
     updateStats();
   }
   else if (msg.type === 'final') {
@@ -676,7 +862,7 @@ function log(msg, type='info') {
   area.scrollTop = area.scrollHeight;
 }
 
-init();
+window.onload = function() { init(); };
 </script>
 </body>
 </html>
