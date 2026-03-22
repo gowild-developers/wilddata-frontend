@@ -728,7 +728,7 @@ function handleMessage(msg) {
     }
     // Track source
     const stage = msg.stage || '';
-    const TRACKED = ['osm','wikidata','wikipedia','geonames','waymarked','protected_planet','country','ai_enrich'];
+    const TRACKED = ['osm','opentripmap','wikipedia','geonames','waymarked','protected_planet','country','ai_enrich'];
     if (TRACKED.includes(stage)) sourcesUsed.add(stage);
   }
   else if (msg.type === 'results') {
