@@ -151,6 +151,8 @@ tr:hover td{background:rgba(61,220,132,.03);color:var(--text)}
 .map-badge{font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
 .leaflet-control-zoom a{background:var(--card)!important;color:var(--text)!important;border-color:var(--border)!important}
 .leaflet-control-zoom a:hover{background:var(--bg3)!important}
+.map-layer-btn{padding:3px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s}
+.map-layer-btn.active{background:rgba(61,220,132,.15);border-color:var(--accent);color:var(--accent)}
 tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!important}
 </style>
 </head>
@@ -271,9 +273,11 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
       <div class="map-panel">
         <div class="map-header">
           <h3>🗺️ Map <span class="map-badge" id="mapBadge">0 markers</span></h3>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span style="font-size:11px;color:var(--text3)">Click marker for details</span>
-            <button onclick="fitMapToMarkers()" style="padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer;font-family:'Syne',sans-serif">Fit All</button>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="map-layer-btn active" id="layerDark" onclick="setMapLayer('dark')">Dark</button>
+            <button class="map-layer-btn" id="layerSat" onclick="setMapLayer('satellite')">Satellite</button>
+            <button class="map-layer-btn" id="layerTopo" onclick="setMapLayer('topo')">Topo</button>
+            <button onclick="fitMapToMarkers()" style="padding:3px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:11px;cursor:pointer;font-family:'Syne',sans-serif">Fit All</button>
           </div>
         </div>
         <div id="map"></div>
@@ -380,6 +384,47 @@ function makeMarkerIcon(type, source) {
   });
 }
 
+const MAP_LAYERS = {
+  dark: {
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    opts: { maxZoom: 19 },
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    opts: { maxZoom: 19, tileSize: 256 },
+    labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+  },
+  topo: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+    opts: { maxZoom: 19, tileSize: 256 },
+  },
+};
+
+let currentLayer = null;
+let labelLayer = null;
+let activeLayerKey = 'dark';
+
+function setMapLayer(key) {
+  if (!map) return;
+  const def = MAP_LAYERS[key];
+  if (!def) return;
+
+  if (currentLayer) map.removeLayer(currentLayer);
+  if (labelLayer) { map.removeLayer(labelLayer); labelLayer = null; }
+
+  currentLayer = L.tileLayer(def.url, def.opts).addTo(map);
+  // Satellite: add place name labels on top
+  if (def.labels) {
+    labelLayer = L.tileLayer(def.labels, { maxZoom: 19, tileSize: 256, opacity: 0.85 }).addTo(map);
+  }
+
+  activeLayerKey = key;
+  ['dark','satellite','topo'].forEach(k => {
+    const btn = document.getElementById('layer' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (btn) btn.classList.toggle('active', k === key);
+  });
+}
+
 function initMap() {
   if (map) return;
   map = L.map('map', {
@@ -388,9 +433,7 @@ function initMap() {
     zoomControl: true,
     attributionControl: false,
   });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-  }).addTo(map);
+  currentLayer = L.tileLayer(MAP_LAYERS.dark.url, MAP_LAYERS.dark.opts).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
 }
 
