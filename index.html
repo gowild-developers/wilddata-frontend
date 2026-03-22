@@ -239,6 +239,10 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
             <input type="checkbox" id="enrichElev" checked style="accent-color:var(--accent)"/>
             Elevation data
           </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" id="enrichAI" checked style="accent-color:var(--accent)"/>
+            AI validation &amp; descriptions <span style="font-size:10px;background:rgba(61,220,132,.15);color:var(--accent);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace">Gemini</span>
+          </label>
         </div>
       </div>
 
@@ -624,6 +628,7 @@ async function startExtraction() {
     do_enrich_wiki: document.getElementById('enrichWiki').checked,
     do_enrich_elevation: document.getElementById('enrichElev').checked,
     do_enrich_geocoding: document.getElementById('enrichGeo').checked,
+    do_enrich_ai: document.getElementById('enrichAI').checked,
   });
 
   log('Starting extraction...', 'info');
@@ -680,7 +685,7 @@ function handleMessage(msg) {
     }
     // Track source
     const stage = msg.stage || '';
-    const TRACKED = ['osm','wikidata','wikipedia','geonames','waymarked','protected_planet','country'];
+    const TRACKED = ['osm','wikidata','wikipedia','geonames','waymarked','protected_planet','country','ai_enrich'];
     if (TRACKED.includes(stage)) sourcesUsed.add(stage);
   }
   else if (msg.type === 'results') {
