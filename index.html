@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>WildData — Outdoor Feature Extractor</title>
+<title>WildData — Outdoor Feature Extractor v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -294,7 +294,7 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
             <tbody id="tableBody">
               <tr><td colspan="12"><div class="empty-state">
                 <div class="big-icon">🗺️</div>
-                <p>1. Enter your Render.com API URL above<br>2. Search a location<br>3. Click Extract Data</p>
+                <p>1. Enter your Render.com API URL above<br>2. Search a location<br>3. Click Extract Data<br><span style="font-size:11px;color:var(--text3)">Sources: OSM · Wikidata · Wikipedia · GeoNames · Waymarked · Protected Planet · Govt APIs</span></p>
               </div></td></tr>
             </tbody>
           </table>
@@ -322,8 +322,8 @@ const FEATURES = [
   {id:"volcano",label:"Volcanoes",icon:"🌋"},
 ];
 
-const OSM_HIGH = ["FR","DE","GB","IT","ES","NL","BE","AT","CH","NO","SE","FI","DK","US","CA","AU","NZ","JP","PT","GR"];
-const OSM_LOW  = ["IN","NP","PK","BD","CN","MM","KH","LA","AF"];
+const OSM_HIGH = ["FR","DE","GB","IT","ES","NL","BE","AT","CH","NO","SE","FI","DK","PL","CZ","US","CA","AU","NZ","JP","PT","GR","HU","RO","SK","SI","HR","RS","BG","CY","LV","LT","EE","LU","MT","IS","BR","ZA","AR","CL","CO","MX","KR","TW","SG"];
+const OSM_LOW  = ["IN","NP","PK","BD","CN","MM","KH","LA","AF","IQ","SY","LY","SD","ET","SO","MG","VN"];
 
 let selectedPlace = null;
 let selectedFeatures = new Set(["waterfall","hiking","peak"]);
@@ -680,7 +680,8 @@ function handleMessage(msg) {
     }
     // Track source
     const stage = msg.stage || '';
-    if (['osm','wikidata','wikipedia','country'].includes(stage)) sourcesUsed.add(stage);
+    const TRACKED = ['osm','wikidata','wikipedia','geonames','waymarked','protected_planet','country'];
+    if (TRACKED.includes(stage)) sourcesUsed.add(stage);
   }
   else if (msg.type === 'results') {
     (msg.data || []).forEach(r => { if (r.source) sourcesUsed.add(r.source); });
