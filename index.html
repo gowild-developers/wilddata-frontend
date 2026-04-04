@@ -1082,6 +1082,10 @@ function handleMessage(msg) {
   }
   else if (msg.type === 'final') {
     results = filterRowsByRegion(msg.data || []);
+    // Redraw map with deduplicated final results so map count matches export count
+    clearMapMarkers();
+    updateMapCenter();
+    addMarkersToMap(results);
     renderTable();
     updateStats();
   }
