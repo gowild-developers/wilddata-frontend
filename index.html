@@ -364,6 +364,11 @@ const FEATURES = [
   {id:"beach",label:"Beaches",icon:"🏖️"},
   {id:"glacier",label:"Glaciers",icon:"🧊"},
   {id:"volcano",label:"Volcanoes",icon:"🌋"},
+  {id:"ruins",label:"Ruins / Castles",icon:"🏯"},
+  {id:"wilderness_hut",label:"Mountain Huts",icon:"🛖"},
+  {id:"cliff",label:"Cliffs",icon:"🪨"},
+  {id:"spring",label:"Natural Springs",icon:"💦"},
+  {id:"lighthouse",label:"Lighthouses",icon:"🗼"},
 ];
 
 const OSM_HIGH = ["FR","DE","GB","IT","ES","NL","BE","AT","CH","NO","SE","FI","DK","PL","CZ","US","CA","AU","NZ","JP","PT","GR","HU","RO","SK","SI","HR","RS","BG","CY","LV","LT","EE","LU","MT","IS","BR","ZA","AR","CL","CO","MX","KR","TW","SG"];
@@ -391,7 +396,8 @@ const TYPE_ICONS = {
   lake:'🏞️', forest:'🌲', national_park:'🌲', nature_reserve:'🌿',
   viewpoint:'👁️', beach:'🏖️', hot_spring:'♨️', glacier:'🧊',
   volcano:'🌋', river:'💧', mtb:'🚵', motorbiking:'🏍️',
-  cultural:'🏛️', historic:'🏺', wildlife:'🦁', sighting:'🦁', default:'📍'
+  cultural:'🏛️', historic:'🏺', wildlife:'🦁', sighting:'🦁',
+  ruins:'🏯', wilderness_hut:'🛖', cliff:'🪨', spring:'💦', lighthouse:'🗼', default:'📍'
 };
 
 function getTypeIcon(type) {
@@ -1066,7 +1072,7 @@ function handleMessage(msg) {
     }
     // Track source
     const stage = msg.stage || '';
-    const TRACKED = ['osm','opentripmap','wikipedia','geonames','geoapify','foursquare','here','inaturalist','waymarked','protected_planet','country','ai_enrich','dedup'];
+    const TRACKED = ['osm','opentripmap','wikipedia','geonames','geoapify','foursquare','here','inaturalist','unesco','waymarked','protected_planet','country','ai_enrich','dedup'];
     if (TRACKED.includes(stage)) sourcesUsed.add(stage);
   }
   else if (msg.type === 'results') {
@@ -1162,6 +1168,8 @@ function getSourceBadge(source) {
     return '<span class="src-badge src-default" style="background:rgba(0,212,142,.12);color:#00d48e;border-color:rgba(0,212,142,.3)">◉ HERE</span>';
   if (s.includes('inaturalist') || s.includes('inat'))
     return '<span class="src-badge src-default" style="background:rgba(116,195,101,.12);color:#74c365;border-color:rgba(116,195,101,.3)">🌿 iNat</span>';
+  if (s.includes('unesco') || s.includes('whc'))
+    return '<span class="src-badge src-default" style="background:rgba(0,114,188,.15);color:#0072bc;border-color:rgba(0,114,188,.4)">🏛 UNESCO</span>';
   return `<span class="src-badge src-default">${source.slice(0,18)}</span>`;
 }
 
