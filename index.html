@@ -50,7 +50,13 @@ header{display:flex;align-items:center;justify-content:space-between;padding:20p
 .strategy-badge{font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;font-weight:600}
 .strategy-osm{background:rgba(61,220,132,.15);color:var(--accent)}
 .strategy-wiki{background:rgba(0,196,255,.15);color:var(--accent2)}
+.mode-toggle{display:flex;gap:8px;margin-bottom:10px}
+.mode-btn{flex:1;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;letter-spacing:.3px;transition:all .15s}
+.mode-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(61,220,132,.08)}
+.region-hint{display:none;font-size:11px;color:var(--text3);margin-top:6px}
+.region-hint.show{display:block}
 .slider-wrap{margin-bottom:20px}
+.slider-wrap.disabled{opacity:.6}
 .slider-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px;color:var(--text2)}
 .slider-label strong{color:var(--accent);font-family:'JetBrains Mono',monospace}
 input[type=range]{width:100%;-webkit-appearance:none;height:4px;background:var(--border);border-radius:2px;outline:none}
@@ -211,8 +217,14 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
           <span id="countryName">—</span>
           <span class="strategy-badge" id="strategyBadge">—</span>
         </div>
-        <div class="slider-wrap">
-          <div class="slider-label">Radius <strong id="radiusVal">25 km</strong></div>
+        <div class="mode-toggle">
+          <button class="mode-btn" id="modeRadius" onclick="setSearchMode('radius')">Radius</button>
+          <button class="mode-btn active" id="modeRegion" onclick="setSearchMode('region')">Region</button>
+        </div>
+        <div class="region-hint" id="regionHint">Searches within the exact boundary polygon of the selected place — no radius spill-over into neighbouring regions.</div>
+        <div id="boundaryStatus" style="display:none;font-size:11px;font-family:'JetBrains Mono',monospace;padding:6px 10px;border-radius:6px;margin-top:6px"></div>
+        <div class="slider-wrap" id="radiusWrap">
+          <div class="slider-label"><span id="radiusLabel">Radius</span> <strong id="radiusVal">25 km</strong></div>
           <input type="range" id="radiusSlider" min="5" max="300" value="25" step="5"/>
         </div>
         <div class="limit-wrap">
@@ -250,6 +262,22 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer">
             <input type="checkbox" id="enrichAI" checked style="accent-color:var(--accent)"/>
             AI validation &amp; descriptions <span style="font-size:10px;background:rgba(61,220,132,.15);color:var(--accent);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace">Gemini</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" id="useGeoapify" style="accent-color:var(--accent2)"/>
+            <span>Geoapify Places <span style="font-size:10px;background:rgba(0,196,255,.12);color:var(--accent2);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace">3k/day free</span></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" id="useFoursquare" style="accent-color:var(--accent2)"/>
+            <span>Foursquare Places <span style="font-size:10px;background:rgba(255,179,71,.12);color:var(--warn);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace">1k/day free</span></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" id="useHere" style="accent-color:var(--accent2)"/>
+            <span>HERE Places <span style="font-size:10px;background:rgba(61,220,132,.12);color:var(--accent);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace">250k/month free</span></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" id="useInaturalist" checked style="accent-color:var(--accent)"/>
+            <span>iNaturalist <span style="font-size:10px;background:rgba(61,220,132,.12);color:var(--accent);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace">free · no key</span></span>
           </label>
         </div>
       </div>
@@ -308,7 +336,7 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
             <tbody id="tableBody">
               <tr><td colspan="12"><div class="empty-state">
                 <div class="big-icon">🗺️</div>
-                <p>1. Enter your Render.com API URL above<br>2. Search a location<br>3. Click Extract Data<br><span style="font-size:11px;color:var(--text3)">Sources: OSM · Wikidata · Wikipedia · GeoNames · Waymarked · Protected Planet · Govt APIs</span></p>
+                <p>1. Enter your Render.com API URL above<br>2. Search a location<br>3. Click Extract Data<br><span style="font-size:11px;color:var(--text3)">Sources: OSM · OpenTripMap · Wikipedia · GeoNames · Waymarked · Protected Planet · iNaturalist · HERE · Geoapify · Foursquare · Govt APIs</span></p>
               </div></td></tr>
             </tbody>
           </table>
@@ -327,6 +355,8 @@ const FEATURES = [
   {id:"peak",label:"Peaks / Summits",icon:"⛰️"},
   {id:"park",label:"National Parks",icon:"🌲"},
   {id:"viewpoint",label:"Viewpoints",icon:"👁️"},
+  {id:"cultural",label:"Cultural Sites",icon:"🏛️"},
+  {id:"historic",label:"Historical Sites",icon:"🏺"},
   {id:"camp",label:"Campsites",icon:"⛺"},
   {id:"cave",label:"Caves",icon:"🦇"},
   {id:"hot_spring",label:"Hot Springs",icon:"♨️"},
@@ -340,7 +370,8 @@ const OSM_HIGH = ["FR","DE","GB","IT","ES","NL","BE","AT","CH","NO","SE","FI","D
 const OSM_LOW  = ["IN","NP","PK","BD","CN","MM","KH","LA","AF","IQ","SY","LY","SD","ET","SO","MG","VN"];
 
 let selectedPlace = null;
-let selectedFeatures = new Set(["waterfall","hiking","peak"]);
+let searchMode = 'region';
+let selectedFeatures = new Set(["waterfall","hiking","peak","park","historic","cultural","viewpoint"]);
 let results = [];
 let abortController = null;
 let suggestTimer = null;
@@ -351,13 +382,16 @@ let sourcesUsed = new Set();
 let map = null;
 let markersLayer = null;
 let radiusCircle = null;
+let regionRect = null;
+let regionPolygon = null;
 let centerMarker = null;
 
 const TYPE_ICONS = {
   waterfall:'💧', peak:'⛰️', hiking:'🥾', camp:'⛺', cave:'🦇',
   lake:'🏞️', forest:'🌲', national_park:'🌲', nature_reserve:'🌿',
   viewpoint:'👁️', beach:'🏖️', hot_spring:'♨️', glacier:'🧊',
-  volcano:'🌋', river:'💧', mtb:'🚵', motorbiking:'🏍️', default:'📍'
+  volcano:'🌋', river:'💧', mtb:'🚵', motorbiking:'🏍️',
+  cultural:'🏛️', historic:'🏺', wildlife:'🦁', sighting:'🦁', default:'📍'
 };
 
 function getTypeIcon(type) {
@@ -457,13 +491,59 @@ function updateMapCenter() {
   if (!map || !selectedPlace) return;
   const lat = parseFloat(selectedPlace.lat);
   const lng = parseFloat(selectedPlace.lon);
+
+  // Remove old shapes and center marker
+  if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+  if (regionRect) { map.removeLayer(regionRect); regionRect = null; }
+  if (regionPolygon) { map.removeLayer(regionPolygon); regionPolygon = null; }
+  if (centerMarker) { map.removeLayer(centerMarker); centerMarker = null; }
+
+  if (searchMode === 'region') {
+    const geo = selectedPlace.boundaryGeojson;
+    if (geo) {
+      regionPolygon = L.geoJSON(geo, {
+        style: { color:'#00c4ff', weight:1.5, fillColor:'#00c4ff', fillOpacity:0.06, dashArray:'6,4' }
+      }).addTo(map);
+      const bounds = regionPolygon.getBounds();
+      const c = bounds.getCenter();
+      centerMarker = L.marker([c.lat, c.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: `<div style="background:#00c4ff;border-radius:50%;width:10px;height:10px;border:2px solid #fff;box-shadow:0 0 8px #00c4ff"></div>`,
+          iconSize: [10,10],
+          iconAnchor: [5,5],
+        })
+      }).addTo(map);
+      map.fitBounds(bounds, { padding: [20,20] });
+      return;
+    }
+
+    const bbox = getSelectedBbox();
+    if (bbox) {
+      regionRect = L.rectangle([[bbox.south, bbox.west], [bbox.north, bbox.east]], {
+        color: '#00c4ff',
+        fillColor: '#00c4ff',
+        fillOpacity: 0.06,
+        weight: 1.5,
+        dashArray: '6,4',
+      }).addTo(map);
+
+      const c = bboxCenter(bbox);
+      centerMarker = L.marker([c.lat, c.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: `<div style="background:#00c4ff;border-radius:50%;width:10px;height:10px;border:2px solid #fff;box-shadow:0 0 8px #00c4ff"></div>`,
+          iconSize: [10,10],
+          iconAnchor: [5,5],
+        })
+      }).addTo(map);
+
+      map.fitBounds(regionRect.getBounds(), { padding: [20,20] });
+      return;
+    }
+  }
+
   const radius = parseInt(document.getElementById('radiusSlider').value);
-
-  // Remove old circle and center marker
-  if (radiusCircle) map.removeLayer(radiusCircle);
-  if (centerMarker) map.removeLayer(centerMarker);
-
-  // Draw radius circle
   radiusCircle = L.circle([lat, lng], {
     radius: radius * 1000,
     color: '#3ddc84',
@@ -473,7 +553,6 @@ function updateMapCenter() {
     dashArray: '6,4',
   }).addTo(map);
 
-  // Center pin
   centerMarker = L.marker([lat, lng], {
     icon: L.divIcon({
       className: '',
@@ -512,7 +591,7 @@ function addMarkersToMap(rows) {
 
     // Click on marker → highlight row in table
     marker.on('click', () => {
-      highlightRow(idx);
+      highlightRow(results.indexOf(r));
     });
 
     markersLayer.addLayer(marker);
@@ -541,6 +620,8 @@ function fitMapToMarkers() {
 function clearMapMarkers() {
   if (markersLayer) markersLayer.clearLayers();
   if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+  if (regionRect) { map.removeLayer(regionRect); regionRect = null; }
+  if (regionPolygon) { map.removeLayer(regionPolygon); regionPolygon = null; }
   if (centerMarker) { map.removeLayer(centerMarker); centerMarker = null; }
   document.getElementById('mapBadge').textContent = '0 markers';
 }
@@ -549,6 +630,7 @@ function clearMapMarkers() {
 function init() {
   renderChips();
   document.getElementById('radiusSlider').addEventListener('input', e => {
+    if (searchMode === 'region') return;
     document.getElementById('radiusVal').textContent = e.target.value + ' km';
     updateMapCenter();
   });
@@ -557,6 +639,7 @@ function init() {
   // Load saved API URL
   const saved = localStorage.getItem('wilddata_api_url');
   if (saved) document.getElementById('apiUrl').value = saved;
+  setSearchMode('region');
 }
 
 function getApiUrl() {
@@ -650,11 +733,223 @@ function selectPlace(place) {
   document.getElementById('strategyBadge').textContent = strategy;
   document.getElementById('strategyBadge').className = 'strategy-badge ' + cls;
   document.getElementById('countryChip').classList.add('show');
+  updateRegionCoverageLabel();
   updateMapCenter();
+  fetchBoundaryForPlace(place);
 }
 
 function getFlagEmoji(cc) {
   return cc.toUpperCase().split('').map(c => String.fromCodePoint(c.charCodeAt(0)+127397)).join('');
+}
+
+function setRegionHint(text, status) {
+  // status: 'polygon' | 'bbox' | 'loading' | 'none'
+  const statusEl = document.getElementById('boundaryStatus');
+  if (!statusEl) return;
+  if (!text) { statusEl.style.display = 'none'; return; }
+  statusEl.style.display = 'block';
+  if (status === 'polygon') {
+    statusEl.style.background = 'rgba(61,220,132,.1)';
+    statusEl.style.color = 'var(--accent)';
+    statusEl.style.border = '1px solid rgba(61,220,132,.3)';
+    statusEl.textContent = '✓ OSM polygon boundary loaded';
+  } else if (status === 'bbox') {
+    statusEl.style.background = 'rgba(255,179,71,.1)';
+    statusEl.style.color = 'var(--warn)';
+    statusEl.style.border = '1px solid rgba(255,179,71,.3)';
+    statusEl.textContent = '⚠ Using bounding box (no polygon found)';
+  } else if (status === 'loading') {
+    statusEl.style.background = 'rgba(0,196,255,.08)';
+    statusEl.style.color = 'var(--accent2)';
+    statusEl.style.border = '1px solid rgba(0,196,255,.2)';
+    statusEl.textContent = '⟳ Loading boundary polygon...';
+  } else {
+    statusEl.style.background = 'rgba(255,69,69,.08)';
+    statusEl.style.color = 'var(--danger)';
+    statusEl.style.border = '1px solid rgba(255,69,69,.2)';
+    statusEl.textContent = '✗ No boundary — select a place first';
+  }
+}
+
+async function fetchBoundaryForPlace(place) {
+  if (!place) return;
+  place.boundaryGeojson = null;
+  if (!place.osm_id || !place.osm_type) {
+    setRegionHint('Using bounding box (no OSM polygon for this place)', 'bbox');
+    updateRegionCoverageLabel();
+    updateMapCenter();
+    return;
+  }
+
+  const prefix = place.osm_type === 'relation' ? 'R' : place.osm_type === 'way' ? 'W' : 'N';
+  setRegionHint('Loading boundary polygon...', 'loading');
+
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/lookup?osm_ids=${prefix}${place.osm_id}&format=json&polygon_geojson=1`, {
+      headers: { 'Accept-Language': 'en' }
+    });
+    const data = await res.json();
+    const geo = data && data[0] && data[0].geojson ? data[0].geojson : null;
+    place.boundaryGeojson = geo || null;
+
+    if (selectedPlace !== place) return;
+    if (geo) setRegionHint('OSM polygon boundary loaded', 'polygon');
+    else setRegionHint('No polygon found — using bounding box', 'bbox');
+  } catch (e) {
+    place.boundaryGeojson = null;
+    if (selectedPlace !== place) return;
+    setRegionHint('Boundary fetch failed — using bounding box', 'bbox');
+  }
+
+  if (selectedPlace === place) {
+    updateRegionCoverageLabel();
+    updateMapCenter();
+  }
+}
+
+function getSelectedBbox() {
+  if (!selectedPlace || !selectedPlace.boundingbox) return null;
+  const b = selectedPlace.boundingbox.map(n => parseFloat(n));
+  if (b.length !== 4 || b.some(n => isNaN(n))) return null;
+  const [south, north, west, east] = b;
+  return { south, north, west, east };
+}
+
+function geojsonToBbox(geo) {
+  if (!geo || !geo.coordinates) return null;
+  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+  const walk = coords => {
+    if (!coords) return;
+    if (typeof coords[0] === 'number') {
+      const lng = coords[0];
+      const lat = coords[1];
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+      if (lng < minLng) minLng = lng;
+      if (lng > maxLng) maxLng = lng;
+      return;
+    }
+    coords.forEach(walk);
+  };
+  walk(geo.coordinates);
+  if (minLat > maxLat) return null;
+  return { south: minLat, north: maxLat, west: minLng, east: maxLng };
+}
+
+function getRegionBbox() {
+  const geo = selectedPlace?.boundaryGeojson;
+  const bbox = geo ? geojsonToBbox(geo) : null;
+  return bbox || getSelectedBbox();
+}
+
+function bboxCenter(b) {
+  return { lat: (b.north + b.south) / 2, lng: (b.east + b.west) / 2 };
+}
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const toRad = d => d * Math.PI / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function bboxRadiusKm(b) {
+  const c = bboxCenter(b);
+  const corners = [
+    { lat: b.south, lng: b.west },
+    { lat: b.south, lng: b.east },
+    { lat: b.north, lng: b.west },
+    { lat: b.north, lng: b.east },
+  ];
+  return Math.max(...corners.map(p => haversineKm(c.lat, c.lng, p.lat, p.lng)));
+}
+
+function pointInRing(pt, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1];
+    const xj = ring[j][0], yj = ring[j][1];
+    const intersect = ((yi > pt.lat) !== (yj > pt.lat)) &&
+      (pt.lng < (xj - xi) * (pt.lat - yi) / (yj - yi + 0.0) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function pointInPolygon(pt, polygonCoords) {
+  if (!polygonCoords || !polygonCoords.length) return false;
+  if (!pointInRing(pt, polygonCoords[0])) return false;
+  for (let i = 1; i < polygonCoords.length; i++) {
+    if (pointInRing(pt, polygonCoords[i])) return false;
+  }
+  return true;
+}
+
+function pointInGeoJSON(pt, geo) {
+  if (!geo) return false;
+  if (geo.type === 'Polygon') return pointInPolygon(pt, geo.coordinates);
+  if (geo.type === 'MultiPolygon') return geo.coordinates.some(p => pointInPolygon(pt, p));
+  return false;
+}
+
+function updateRegionCoverageLabel() {
+  if (searchMode !== 'region') return;
+  const bbox = getRegionBbox();
+  const el = document.getElementById('radiusVal');
+  if (!bbox) { el.textContent = '—'; return; }
+  const km = Math.max(1, Math.round(bboxRadiusKm(bbox)));
+  el.textContent = `${km} km`;
+}
+
+function setSearchMode(mode) {
+  searchMode = mode === 'region' ? 'region' : 'radius';
+  document.getElementById('modeRadius').classList.toggle('active', searchMode === 'radius');
+  document.getElementById('modeRegion').classList.toggle('active', searchMode === 'region');
+  document.getElementById('radiusLabel').textContent = searchMode === 'region' ? 'Region coverage (auto)' : 'Radius';
+  document.getElementById('regionHint').classList.toggle('show', searchMode === 'region');
+  const bsEl = document.getElementById('boundaryStatus');
+  if (bsEl) bsEl.style.display = searchMode === 'region' ? 'block' : 'none';
+
+  const slider = document.getElementById('radiusSlider');
+  const wrap = document.getElementById('radiusWrap');
+  if (searchMode === 'region') {
+    slider.disabled = true;
+    wrap.classList.add('disabled');
+    if (selectedPlace?.boundaryGeojson) setRegionHint('OSM polygon boundary loaded', 'polygon');
+    else if (selectedPlace) setRegionHint('Loading boundary polygon...', 'loading');
+    else setRegionHint('Select a place to load its boundary', 'none');
+    if (selectedPlace && !selectedPlace.boundaryGeojson) fetchBoundaryForPlace(selectedPlace);
+    updateRegionCoverageLabel();
+  } else {
+    slider.disabled = false;
+    wrap.classList.remove('disabled');
+    document.getElementById('radiusVal').textContent = slider.value + ' km';
+  }
+  updateMapCenter();
+}
+
+function filterRowsByRegion(rows) {
+  if (searchMode !== 'region') return rows;
+  const geo = selectedPlace?.boundaryGeojson;
+  if (geo) {
+    return rows.filter(r => {
+      const lat = parseFloat(r.lat);
+      const lng = parseFloat(r.lng);
+      if (isNaN(lat) || isNaN(lng)) return false;
+      return pointInGeoJSON({ lat, lng }, geo);
+    });
+  }
+  const bbox = getSelectedBbox();
+  if (!bbox) return rows;
+  return rows.filter(r => {
+    const lat = parseFloat(r.lat);
+    const lng = parseFloat(r.lng);
+    if (isNaN(lat) || isNaN(lng)) return false;
+    return lat >= bbox.south && lat <= bbox.north && lng >= bbox.west && lng <= bbox.east;
+  });
 }
 
 // ── Extraction
@@ -676,10 +971,23 @@ async function startExtraction() {
   updateMapCenter();
   updateStats();
 
+  const regionBbox = searchMode === 'region' ? getRegionBbox() : null;
+  let radiusKm = document.getElementById('radiusSlider').value;
+  let searchLat = selectedPlace.lat;
+  let searchLng = selectedPlace.lon;
+  if (searchMode === 'region' && regionBbox) {
+    radiusKm = Math.max(5, Math.ceil(bboxRadiusKm(regionBbox)));
+    const c = bboxCenter(regionBbox);
+    searchLat = c.lat;
+    searchLng = c.lng;
+  } else if (searchMode === 'region' && !regionBbox) {
+    log('Region mode selected, but no boundary found. Falling back to radius search.', 'warn');
+  }
+
   const params = new URLSearchParams({
-    lat: selectedPlace.lat,
-    lng: selectedPlace.lon,
-    radius_km: document.getElementById('radiusSlider').value,
+    lat: searchLat,
+    lng: searchLng,
+    radius_km: radiusKm,
     features: [...selectedFeatures].join(','),
     limit: document.getElementById('limitInput').value,
     country_code: (selectedPlace.address?.country_code || '').toUpperCase(),
@@ -687,10 +995,24 @@ async function startExtraction() {
     do_enrich_elevation: document.getElementById('enrichElev').checked,
     do_enrich_geocoding: document.getElementById('enrichGeo').checked,
     do_enrich_ai: document.getElementById('enrichAI').checked,
+    use_geoapify: document.getElementById('useGeoapify').checked,
+    use_foursquare: document.getElementById('useFoursquare').checked,
+    use_here: document.getElementById('useHere').checked,
+    use_inaturalist: document.getElementById('useInaturalist').checked,
   });
+  if (searchMode === 'region' && regionBbox) {
+    params.set('search_mode', 'region');
+    params.set('region_bbox', `${regionBbox.south},${regionBbox.west},${regionBbox.north},${regionBbox.east}`);
+  }
 
   log('Starting extraction...', 'info');
-  log(`Location: ${selectedPlace.lat}, ${selectedPlace.lon} | Radius: ${params.get('radius_km')}km`, 'info');
+  if (searchMode === 'region' && regionBbox) {
+    const boundaryType = selectedPlace?.boundaryGeojson ? 'polygon' : 'bbox';
+    log(`Region mode (${boundaryType}): [${regionBbox.south}, ${regionBbox.west}] → [${regionBbox.north}, ${regionBbox.east}]`, 'info');
+    log(`Search center: ${searchLat}, ${searchLng} | Auto radius: ${params.get('radius_km')}km`, 'info');
+  } else {
+    log(`Location: ${selectedPlace.lat}, ${selectedPlace.lon} | Radius: ${params.get('radius_km')}km`, 'info');
+  }
 
   try {
     const res = await fetch(`${apiUrl}/extract?${params}`, {
@@ -743,25 +1065,30 @@ function handleMessage(msg) {
     }
     // Track source
     const stage = msg.stage || '';
-    const TRACKED = ['osm','opentripmap','wikipedia','geonames','waymarked','protected_planet','country','ai_enrich'];
+    const TRACKED = ['osm','opentripmap','wikipedia','geonames','geoapify','foursquare','here','inaturalist','waymarked','protected_planet','country','ai_enrich','dedup'];
     if (TRACKED.includes(stage)) sourcesUsed.add(stage);
   }
   else if (msg.type === 'results') {
-    (msg.data || []).forEach(r => { if (r.source) sourcesUsed.add(r.source); });
-    results.push(...(msg.data || []));
-    renderTableRows(msg.data || []);
-    addMarkersToMap(msg.data || []);
+    const data = filterRowsByRegion(msg.data || []);
+    data.forEach(r => { if (r.source) sourcesUsed.add(r.source); });
+    results.push(...data);
+    renderTableRows(data);
+    addMarkersToMap(data);
     updateStats();
+    if (searchMode === 'region') {
+      document.getElementById('progressCount').textContent = results.length + ' results';
+    }
   }
   else if (msg.type === 'final') {
-    results = msg.data || [];
+    results = filterRowsByRegion(msg.data || []);
     renderTable();
     updateStats();
   }
   else if (msg.type === 'done') {
+    const total = searchMode === 'region' ? results.length : msg.total;
     document.getElementById('progressBar').style.width = '100%';
-    document.getElementById('progressTitle').textContent = `Complete ✓ — ${msg.total} features`;
-    log(`✓ Done! ${msg.total} unique features extracted.`, 'success');
+    document.getElementById('progressTitle').textContent = `Complete ✓ — ${total} features`;
+    log(`✓ Done! ${total} unique features extracted.`, 'success');
   }
   else if (msg.type === 'error') {
     log('Error: ' + msg.message, 'error');
@@ -814,12 +1141,22 @@ function getSourceBadge(source) {
     return '<span class="src-badge src-govt">🇮🇳 IN Govt</span>';
   if (s.includes('japan') || s.includes('gsi'))
     return '<span class="src-badge src-govt">🇯🇵 GSI</span>';
+  if (s.includes('opentripmap') || s === 'otm')
+    return '<span class="src-badge src-default" style="background:rgba(255,107,0,.12);color:#ff6b00;border-color:rgba(255,107,0,.3)">🗺 OTM</span>';
   if (s.includes('openstreetmap') || s === 'osm')
     return '<span class="src-badge src-osm">● OSM</span>';
   if (s.includes('wikidata'))
     return '<span class="src-badge src-wikidata">◆ Wikidata</span>';
   if (s.includes('wikipedia'))
     return '<span class="src-badge src-wiki">◈ Wikipedia</span>';
+  if (s.includes('geoapify'))
+    return '<span class="src-badge src-default" style="background:rgba(0,196,255,.12);color:#00c4ff;border-color:rgba(0,196,255,.3)">◈ Geoapify</span>';
+  if (s.includes('foursquare') || s.includes('fsq'))
+    return '<span class="src-badge src-default" style="background:rgba(255,44,85,.12);color:#ff2c55;border-color:rgba(255,44,85,.3)">◆ Foursquare</span>';
+  if (s.includes('here places') || s === 'here')
+    return '<span class="src-badge src-default" style="background:rgba(0,212,142,.12);color:#00d48e;border-color:rgba(0,212,142,.3)">◉ HERE</span>';
+  if (s.includes('inaturalist') || s.includes('inat'))
+    return '<span class="src-badge src-default" style="background:rgba(116,195,101,.12);color:#74c365;border-color:rgba(116,195,101,.3)">🌿 iNat</span>';
   return `<span class="src-badge src-default">${source.slice(0,18)}</span>`;
 }
 
@@ -842,7 +1179,7 @@ function renderTableRows(rows) {
       <td>${r.elevation||'—'}</td>
       <td>${r.region||'—'}</td>
       <td>${r.country||'—'}</td>
-      <td title="${r.description||''}">${r.description?r.description.slice(0,60)+'...':'—'}</td>
+      <td title="${r.description||''}">${r.description?(r.description.slice(0,60)+(r.description.length>60?'…':'')):'—'}</td>
       <td>${r.wikipedia?`<a href="${r.wikipedia}" target="_blank" style="color:var(--accent2);font-size:11px">↗ Wiki</a>`:'—'}</td>
       <td>${getSourceBadge(r.source)}</td>
       <td><span class="confidence-chip ${confClass(r.confidence||'Low')}">${r.confidence||'Low'}</span></td>`;
@@ -912,6 +1249,7 @@ function exportXLSX() {
 
 function clearResults() {
   results = [];
+  clearMapMarkers();
   renderTable();
   updateStats();
 }
