@@ -330,11 +330,11 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
           <table>
             <thead><tr>
               <th>#</th><th>Name</th><th>Type</th><th>Lat</th><th>Lng</th>
-              <th>Elevation</th><th>Region</th><th>Country</th>
+              <th>Elevation</th><th>City / Nearest Town</th><th>Region</th><th>Country</th>
               <th>Description</th><th>Wikipedia</th><th>Source</th><th>Confidence</th>
             </tr></thead>
             <tbody id="tableBody">
-              <tr><td colspan="12"><div class="empty-state">
+              <tr><td colspan="13"><div class="empty-state">
                 <div class="big-icon">🗺️</div>
                 <p>1. Enter your Render.com API URL above<br>2. Search a location<br>3. Click Extract Data<br><span style="font-size:11px;color:var(--text3)">Sources: OSM · OpenTripMap · Wikipedia · GeoNames · Waymarked · Protected Planet · iNaturalist · HERE · Geoapify · Foursquare · Govt APIs</span></p>
               </div></td></tr>
@@ -584,6 +584,7 @@ function addMarkersToMap(rows) {
       ${desc}
       <div class="popup-detail" style="margin-top:4px">
         ${r.elevation ? '⬆ ' + r.elevation + '&nbsp;&nbsp;' : ''}
+        ${r.city ? '🏘 ' + r.city + '&nbsp;&nbsp;' : ''}
         ${r.region ? '📍 ' + r.region : ''}
         ${wikiLink}
       </div>
@@ -1111,7 +1112,7 @@ function renderTable() {
   document.getElementById('tableBody').innerHTML = '';
   document.getElementById('tableCount').textContent = `— ${results.length} rows`;
   if (!results.length) {
-    document.getElementById('tableBody').innerHTML = `<tr><td colspan="12"><div class="empty-state"><div class="big-icon">🔍</div><p>No results found.</p></div></td></tr>`;
+    document.getElementById('tableBody').innerHTML = `<tr><td colspan="13"><div class="empty-state"><div class="big-icon">🔍</div><p>No results found.</p></div></td></tr>`;
     return;
   }
   renderTableRows(results);
@@ -1177,6 +1178,7 @@ function renderTableRows(rows) {
       <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${parseFloat(r.lat||0).toFixed(5)}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${parseFloat(r.lng||0).toFixed(5)}</td>
       <td>${r.elevation||'—'}</td>
+      <td>${r.city||'—'}</td>
       <td>${r.region||'—'}</td>
       <td>${r.country||'—'}</td>
       <td title="${r.description||''}">${r.description?(r.description.slice(0,60)+(r.description.length>60?'…':'')):'—'}</td>
@@ -1203,6 +1205,7 @@ function getExportData() {
     'Latitude': r.lat,
     'Longitude': r.lng,
     'Elevation': r.elevation || '',
+    'City / Nearest Town': r.city || '',
     'Region / State': r.region || '',
     'Country': r.country || '',
     'Description': r.description || '',
