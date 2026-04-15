@@ -31,7 +31,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:20p
 .api-url-chip{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);border:1px solid var(--border);padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:6px}
 .api-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
 .api-dot.connected{background:var(--accent);box-shadow:0 0 6px var(--accent)}
-.layout{display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start}
+.layout{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;height:calc(100vh - 100px)}
+.left-col{display:flex;flex-direction:column;gap:12px;max-height:100%;overflow-y:auto;padding-right:8px}
+.right-col{display:grid;grid-template-rows:auto 1fr auto;gap:16px;max-height:100%;overflow:hidden}
+.right-col > *{overflow-y:auto}
 .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px}
 .panel-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:20px;font-family:'JetBrains Mono',monospace}
 .search-wrap{position:relative;margin-bottom:16px}
@@ -61,8 +64,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:20p
 .slider-label strong{color:var(--accent);font-family:'JetBrains Mono',monospace}
 input[type=range]{width:100%;-webkit-appearance:none;height:4px;background:var(--border);border-radius:2px;outline:none}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer}
-.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
-.feature-chip{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;color:var(--text2);transition:all .15s;user-select:none}
+.features-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.feature-chip{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:11px;color:var(--text2);transition:all .15s;user-select:none;flex-grow:1;justify-content:center;text-align:center}
 .feature-chip:hover{border-color:var(--accent);color:var(--text)}
 .feature-chip.active{border-color:var(--accent);background:rgba(61,220,132,.08);color:var(--accent)}
 .sources-list{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
@@ -86,7 +89,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .btn-stop{width:100%;padding:14px;background:transparent;color:var(--danger);border:1px solid var(--danger);border-radius:10px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;display:none}
 .btn-stop:hover{background:rgba(255,69,69,.1)}
 .btn-stop.show{display:block}
-.right-col{display:flex;flex-direction:column;gap:20px}
 .progress-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;display:none}
 .progress-panel.show{display:block}
 .progress-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
@@ -105,7 +107,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
 .stat-num{font-size:28px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--accent);line-height:1;margin-bottom:4px}
 .stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
-.table-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.table-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;flex:1}
 .table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
 .table-header h3{font-size:14px;font-weight:700}
 .export-btns{display:flex;gap:8px}
@@ -116,7 +118,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .btn-xlsx:hover{background:rgba(0,196,255,.1)}
 .btn-clear{background:transparent;border-color:var(--border);color:var(--text3)}
 .btn-clear:hover{border-color:var(--danger);color:var(--danger)}
-.table-wrap{overflow-x:auto;max-height:420px;overflow-y:auto}
+.table-wrap{overflow-x:auto;flex:1;overflow-y:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 thead{position:sticky;top:0;z-index:10}
 thead tr{background:var(--bg3)}
@@ -144,12 +146,12 @@ tr:hover td{background:rgba(61,220,132,.03);color:var(--text)}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-@media(max-width:900px){.layout{grid-template-columns:1fr}.stats-bar{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.layout{grid-template-columns:1fr;height:auto}.left-col,.right-col{max-height:none}.stats-bar{grid-template-columns:repeat(2,1fr)}}
 
 .map-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:0}
 .map-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
 .map-header h3{font-size:13px;font-weight:700}
-#map{height:380px;width:100%;background:var(--bg2)}
+#map{height:420px;width:100%;background:var(--bg2)}
 .leaflet-popup-content-wrapper{background:var(--card)!important;border:1px solid var(--border)!important;color:var(--text)!important;border-radius:10px!important;box-shadow:0 8px 32px rgba(0,0,0,.5)!important}
 .leaflet-popup-tip{background:var(--card)!important}
 .leaflet-popup-content{margin:10px 14px!important;font-family:'Syne',sans-serif}
@@ -166,6 +168,13 @@ tr:hover td{background:rgba(61,220,132,.03);color:var(--text)}
 .map-layer-btn{padding:3px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s}
 .map-layer-btn.active{background:rgba(61,220,132,.15);border-color:var(--accent);color:var(--accent)}
 tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!important}
+.extractor-status{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.extractor-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);color:var(--text2);white-space:nowrap;transition:all .2s}
+.extractor-pill.active{border-color:var(--accent);color:var(--accent);background:rgba(61,220,132,.08)}
+.extractor-pill.count{color:var(--accent2);border-color:var(--accent2);background:rgba(0,196,255,.08)}
+.extractor-pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.extractor-pill.loading{animation:pulse 1s infinite}
+.table-panel .table-wrap{max-height:350px}
 </style>
 </head>
 <body>
@@ -186,7 +195,7 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
 
   <div class="layout">
     <!-- LEFT -->
-    <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="left-col">
 
       <!-- API Config -->
       <div class="panel">
@@ -301,6 +310,7 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
           <span class="progress-count" id="progressCount">0 results</span>
         </div>
         <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+        <div id="extractorStatus" class="extractor-status" style="display:none"></div>
         <div class="log-area" id="logArea"></div>
       </div>
 
@@ -348,27 +358,26 @@ tr.highlighted td{background:rgba(61,220,132,.08)!important;color:var(--text)!im
 
 <script>
 const FEATURES = [
-  {id:"waterfall",label:"Waterfalls",icon:"💧"},
-  {id:"hiking",label:"Hiking Routes",icon:"🥾"},
-  {id:"mtb",label:"MTB / Cycling",icon:"🚵"},
-  {id:"motorbiking",label:"Motorbiking",icon:"🏍️"},
+  {id:"waterfall",label:"Waterfall",icon:"💧"},
+  {id:"pool",label:"Natural Pool",icon:"🏊"},
+  {id:"hiking",label:"Hike",icon:"🥾"},
+  {id:"camp",label:"Free-Camping Sites",icon:"⛺"},
+  {id:"hut",label:"Hut",icon:"🛖"},
+  {id:"historic",label:"Historical Site (Ruins, Fort)",icon:"�"},
+  {id:"unesco",label:"Unesco Heritage",icon:"🏛️"},
+  {id:"meadow",label:"Meadow",icon:"�"},
+  {id:"forest_walk",label:"Forest Walk",icon:"�"},
+  {id:"lake",label:"Lake",icon:"🌊"},
+  {id:"gorge",label:"Adventure Gorge/Canyon",icon:"�"},
+  {id:"beach",label:"Beach",icon:"🏖️"},
+  {id:"monastery",label:"Old Monastery & Temple",icon:"🛕"},
   {id:"peak",label:"Peaks / Summits",icon:"⛰️"},
   {id:"park",label:"National Parks",icon:"🌲"},
   {id:"viewpoint",label:"Viewpoints",icon:"👁️"},
-  {id:"cultural",label:"Cultural Sites",icon:"🏛️"},
-  {id:"historic",label:"Historical Sites",icon:"🏺"},
-  {id:"camp",label:"Campsites",icon:"⛺"},
   {id:"cave",label:"Caves",icon:"🦇"},
   {id:"hot_spring",label:"Hot Springs",icon:"♨️"},
-  {id:"waterway",label:"Rivers / Lakes",icon:"🏞️"},
-  {id:"beach",label:"Beaches",icon:"🏖️"},
   {id:"glacier",label:"Glaciers",icon:"🧊"},
   {id:"volcano",label:"Volcanoes",icon:"🌋"},
-  {id:"ruins",label:"Ruins / Castles",icon:"🏯"},
-  {id:"wilderness_hut",label:"Mountain Huts",icon:"🛖"},
-  {id:"cliff",label:"Cliffs",icon:"🪨"},
-  {id:"spring",label:"Natural Springs",icon:"💦"},
-  {id:"lighthouse",label:"Lighthouses",icon:"🗼"},
 ];
 
 const OSM_HIGH = ["FR","DE","GB","IT","ES","NL","BE","AT","CH","NO","SE","FI","DK","PL","CZ","US","CA","AU","NZ","JP","PT","GR","HU","RO","SK","SI","HR","RS","BG","CY","LV","LT","EE","LU","MT","IS","BR","ZA","AR","CL","CO","MX","KR","TW","SG"];
@@ -376,11 +385,13 @@ const OSM_LOW  = ["IN","NP","PK","BD","CN","MM","KH","LA","AF","IQ","SY","LY","S
 
 let selectedPlace = null;
 let searchMode = 'region';
-let selectedFeatures = new Set(["waterfall","hiking","peak","park","historic","cultural","viewpoint"]);
+let selectedFeatures = new Set(["waterfall","hiking","peak","park","historic","viewpoint"]);
 let results = [];
 let abortController = null;
 let suggestTimer = null;
 let sourcesUsed = new Set();
+let extractorCounts = {};
+let currentExtractor = '';
 
 
 // ── MAP ───────────────────────────────────────────────────────────────────────
@@ -1061,6 +1072,28 @@ async function startExtraction() {
   done();
 }
 
+const EXTRACTOR_LABELS = {
+  'osm': 'OSM', 'opentripmap': 'OTM', 'wikipedia': 'Wikipedia',
+  'geonames': 'GeoNames', 'geoapify': 'Geoapify', 'foursquare': 'Foursquare',
+  'here': 'HERE', 'inaturalist': 'iNat', 'unesco': 'UNESCO',
+  'waymarked': 'Waymarked', 'protected_planet': 'Protected', 'country': 'Govt',
+  'wiki_enrich': 'AI', 'geocoding': 'Geo', 'elevation': 'Elevation', 'ai_enrich': 'AI',
+  'dedup': 'Dedup'
+};
+
+function updateExtractorPills() {
+  const el = document.getElementById('extractorStatus');
+  if (!el) return;
+  el.style.display = 'flex';
+  el.innerHTML = Object.entries(extractorCounts).map(([key, count]) => {
+    const label = EXTRACTOR_LABELS[key] || key;
+    return `<span class="extractor-pill count"><span class="dot"></span>${label} <strong>${count}</strong></span>`;
+  }).join('');
+  if (Object.keys(extractorCounts).length === 0) {
+    el.innerHTML = `<span class="extractor-pill loading"><span class="dot"></span>Loading extractors...</span>`;
+  }
+}
+
 function handleMessage(msg) {
   if (msg.type === 'progress') {
     log(msg.message, msg.message.includes('done') || msg.message.includes('✓') ? 'success' : 'info');
@@ -1070,25 +1103,61 @@ function handleMessage(msg) {
       const pct = Math.min((msg.count / parseInt(document.getElementById('limitInput').value)) * 60, 90);
       document.getElementById('progressBar').style.width = pct + '%';
     }
-    // Track source
+    // Track extractor stage
     const stage = msg.stage || '';
-    const TRACKED = ['osm','opentripmap','wikipedia','geonames','geoapify','foursquare','here','inaturalist','unesco','waymarked','protected_planet','country','ai_enrich','dedup'];
-    if (TRACKED.includes(stage)) sourcesUsed.add(stage);
+    const TRACKED = ['osm','opentripmap','wikipedia','geonames','geoapify','foursquare','here','inaturalist','unesco','waymarked','protected_planet','country','wiki_enrich','geocoding','elevation','ai_enrich','dedup'];
+    if (TRACKED.includes(stage)) {
+      currentExtractor = stage;
+      if (msg.message.includes('done') || msg.message.includes('✓')) {
+        // Extractor finished - mark as completed
+      }
+    }
   }
   else if (msg.type === 'results') {
     const data = filterRowsByRegion(msg.data || []);
-    data.forEach(r => { if (r.source) sourcesUsed.add(r.source); });
+    // Count results by source
+    data.forEach(r => {
+      if (r.source) {
+        sourcesUsed.add(r.source);
+        const srcKey = r.source.toLowerCase();
+        if (srcKey.includes('openstreetmap') || srcKey === 'osm') {
+          extractorCounts['osm'] = (extractorCounts['osm'] || 0) + 1;
+        } else if (srcKey.includes('opentripmap')) {
+          extractorCounts['opentripmap'] = (extractorCounts['opentripmap'] || 0) + 1;
+        } else if (srcKey.includes('wikipedia')) {
+          extractorCounts['wikipedia'] = (extractorCounts['wikipedia'] || 0) + 1;
+        } else if (srcKey.includes('geonames')) {
+          extractorCounts['geonames'] = (extractorCounts['geonames'] || 0) + 1;
+        } else if (srcKey.includes('geoapify')) {
+          extractorCounts['geoapify'] = (extractorCounts['geoapify'] || 0) + 1;
+        } else if (srcKey.includes('foursquare')) {
+          extractorCounts['foursquare'] = (extractorCounts['foursquare'] || 0) + 1;
+        } else if (srcKey.includes('here')) {
+          extractorCounts['here'] = (extractorCounts['here'] || 0) + 1;
+        } else if (srcKey.includes('inaturalist')) {
+          extractorCounts['inaturalist'] = (extractorCounts['inaturalist'] || 0) + 1;
+        } else if (srcKey.includes('nps') || srcKey.includes('govt') || srcKey.includes('natura') || srcKey.includes('doc') || srcKey.includes('parks')) {
+          extractorCounts['country'] = (extractorCounts['country'] || 0) + 1;
+        } else if (srcKey.includes('waymarked')) {
+          extractorCounts['waymarked'] = (extractorCounts['waymarked'] || 0) + 1;
+        } else if (srcKey.includes('protected') || srcKey.includes('wdpa')) {
+          extractorCounts['protected_planet'] = (extractorCounts['protected_planet'] || 0) + 1;
+        } else {
+          extractorCounts['other'] = (extractorCounts['other'] || 0) + 1;
+        }
+      }
+    });
     results.push(...data);
     renderTableRows(data);
     addMarkersToMap(data);
     updateStats();
+    updateExtractorPills();
     if (searchMode === 'region') {
       document.getElementById('progressCount').textContent = results.length + ' results';
     }
   }
   else if (msg.type === 'final') {
     results = filterRowsByRegion(msg.data || []);
-    // Redraw map with deduplicated final results so map count matches export count
     clearMapMarkers();
     updateMapCenter();
     addMarkersToMap(results);
@@ -1100,6 +1169,9 @@ function handleMessage(msg) {
     document.getElementById('progressBar').style.width = '100%';
     document.getElementById('progressTitle').textContent = `Complete ✓ — ${total} features`;
     log(`✓ Done! ${total} unique features extracted.`, 'success');
+    // Final summary of sources
+    const srcSummary = Object.entries(extractorCounts).map(([k, v]) => `${EXTRACTOR_LABELS[k]||k}:${v}`).join(', ');
+    if (srcSummary) log(`Sources: ${srcSummary}`, 'info');
   }
   else if (msg.type === 'error') {
     log('Error: ' + msg.message, 'error');
@@ -1259,7 +1331,17 @@ function exportXLSX() {
     ['Sources', [...sourcesUsed].join(', ')],
   ]);
   XLSX.utils.book_append_sheet(wb, meta, 'Metadata');
-  XLSX.writeFile(wb, `wilddata_${Date.now()}.xlsx`);
+  // Generate proper Excel binary file with correct MIME type
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `wilddata_${Date.now()}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 function clearResults() {
