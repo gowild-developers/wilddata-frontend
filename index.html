@@ -972,16 +972,8 @@ function setSearchMode(mode) {
 
 function filterRowsByRegion(rows) {
   if (searchMode !== 'region') return rows;
-  const geo = selectedPlace?.boundaryGeojson;
-  if (geo) {
-    return rows.filter(r => {
-      const lat = parseFloat(r.lat);
-      const lng = parseFloat(r.lng);
-      if (isNaN(lat) || isNaN(lng)) return false;
-      return pointInGeoJSON({ lat, lng }, geo);
-    });
-  }
-  const bbox = getSelectedBbox();
+  // Use bbox only — polygon filter is too strict and removes valid results
+  const bbox = getRegionBbox();
   if (!bbox) return rows;
   return rows.filter(r => {
     const lat = parseFloat(r.lat);
@@ -1135,7 +1127,7 @@ function handleMessage(msg) {
     }
   }
   else if (msg.type === 'results') {
-    const data = msg.data || [];
+    const data = filterRowsByRegion(msg.data || []);
     // Count results by source
     data.forEach(r => {
       if (r.source) {
@@ -1178,9 +1170,7 @@ function handleMessage(msg) {
     }
   }
   else if (msg.type === 'final') {
-    // Use msg.data directly - backend already filtered by bbox
-    // Frontend polygon filter is too strict and removes valid results
-    results = msg.data || [];
+    results = filterRowsByRegion(msg.data || []);
     clearMapMarkers();
     updateMapCenter();
     addMarkersToMap(results);
