@@ -1135,7 +1135,7 @@ function handleMessage(msg) {
     }
   }
   else if (msg.type === 'results') {
-    const data = filterRowsByRegion(msg.data || []);
+    const data = msg.data || [];
     // Count results by source
     data.forEach(r => {
       if (r.source) {
@@ -1178,11 +1178,9 @@ function handleMessage(msg) {
     }
   }
   else if (msg.type === 'final') {
-    // Always use msg.data as the authoritative final result set
-    const finalData = msg.data || [];
-    results = searchMode === 'region' ? filterRowsByRegion(finalData) : finalData;
-    // If region filter removed everything, fall back to unfiltered
-    if (results.length === 0 && finalData.length > 0) results = finalData;
+    // Use msg.data directly - backend already filtered by bbox
+    // Frontend polygon filter is too strict and removes valid results
+    results = msg.data || [];
     clearMapMarkers();
     updateMapCenter();
     addMarkersToMap(results);
