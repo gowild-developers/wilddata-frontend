@@ -1280,8 +1280,8 @@ function renderTableRows(rows) {
       <td class="col-num">${i}</td>
       <td class="col-name td-name" title="${r.name||''}">${r.name || '<em style="color:var(--text3)">Unnamed</em>'}</td>
       <td class="col-type">${r.type||''}</td>
-      <td class="col-lat" style="font-family:'JetBrains Mono',monospace;font-size:11px">${parseFloat(r.lat||0).toFixed(5)}</td>
-      <td class="col-lng" style="font-family:'JetBrains Mono',monospace;font-size:11px">${parseFloat(r.lng||0).toFixed(5)}</td>
+      <td class="col-lat" style="font-family:'JetBrains Mono',monospace;font-size:11px">${r.lat || 0}</td>
+      <td class="col-lng" style="font-family:'JetBrains Mono',monospace;font-size:11px">${r.lng || 0}</td>
       <td class="col-elev">${r.elevation||'—'}</td>
       <td class="col-city">${r.city||'—'}</td>
       <td class="col-region">${r.region||'—'}</td>
