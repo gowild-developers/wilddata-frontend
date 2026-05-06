@@ -992,12 +992,19 @@ async function startExtraction() {
 
   results = [];
   sourcesUsed = new Set();
+  extractorCounts = {};
+  currentExtractor = '';
+  
   abortController = new AbortController();
   document.getElementById('extractBtn').disabled = true;
   document.getElementById('stopBtn').classList.add('show');
   document.getElementById('progressPanel').classList.add('show');
   document.getElementById('progressTitle').textContent = 'Extracting...';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('progressCount').textContent = '0 results';
   document.getElementById('tableBody').innerHTML = '';
+  
+  updateExtractorPills();
   clearMapMarkers();
   updateMapCenter();
   updateStats();
@@ -1394,24 +1401,6 @@ function populateFilters() {
   sel.innerHTML = '<option value="">All Types</option>' + types.map(t => '<option value="' + t + '">' + t + '</option>').join('');
 }
 
-
-function applyFilter() {
-  const typeF = document.getElementById('filterType').value;
-  const confF = document.getElementById('filterConf').value;
-  const filtered = results.filter(r =>
-    (!typeF || (r.type||'') === typeF) &&
-    (!confF || (r.confidence||'') === confF)
-  );
-  document.getElementById('tableBody').innerHTML = '';
-  renderTableRows(filtered);
-  document.getElementById('tableCount').textContent = '— ' + filtered.length + ' of ' + results.length + ' rows';
-}
-
-function populateFilters() {
-  const types = [...new Set(results.map(r => r.type).filter(Boolean))].sort();
-  const sel = document.getElementById('filterType');
-  sel.innerHTML = '<option value="">All Types</option>' + types.map(t => '<option value="' + t + '">' + t + '</option>').join('');
-}
 
 window.onload = function() { init(); };
 </script>
