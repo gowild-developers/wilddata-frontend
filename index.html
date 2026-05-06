@@ -1178,11 +1178,11 @@ function handleMessage(msg) {
     }
   }
   else if (msg.type === 'final') {
-    // Use already-filtered results from streaming, not re-filter msg.data
-    // Re-filtering causes 0 results when polygon boundary is very tight
-    if (results.length === 0 && msg.data && msg.data.length > 0) {
-      results = filterRowsByRegion(msg.data);
-    }
+    // Always use msg.data as the authoritative final result set
+    const finalData = msg.data || [];
+    results = searchMode === 'region' ? filterRowsByRegion(finalData) : finalData;
+    // If region filter removed everything, fall back to unfiltered
+    if (results.length === 0 && finalData.length > 0) results = finalData;
     clearMapMarkers();
     updateMapCenter();
     addMarkersToMap(results);
