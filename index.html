@@ -1178,7 +1178,11 @@ function handleMessage(msg) {
     }
   }
   else if (msg.type === 'final') {
-    results = filterRowsByRegion(msg.data || []);
+    // Use already-filtered results from streaming, not re-filter msg.data
+    // Re-filtering causes 0 results when polygon boundary is very tight
+    if (results.length === 0 && msg.data && msg.data.length > 0) {
+      results = filterRowsByRegion(msg.data);
+    }
     clearMapMarkers();
     updateMapCenter();
     addMarkersToMap(results);
