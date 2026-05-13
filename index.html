@@ -398,6 +398,7 @@ const FEATURES = [
   {id:"hot_spring",label:"Hot Springs",icon:"♨️"},
   {id:"glacier",label:"Glaciers",icon:"🧊"},
   {id:"volcano",label:"Volcanoes",icon:"🌋"},
+  {id:"wildlife_sighting",label:"Wildlife sightings (iNat)",icon:"🦁"},
 ];
 
 const OSM_HIGH = ["FR","DE","GB","IT","ES","NL","BE","AT","CH","NO","SE","FI","DK","PL","CZ","US","CA","AU","NZ","JP","PT","GR","HU","RO","SK","SI","HR","RS","BG","CY","LV","LT","EE","LU","MT","IS","BR","ZA","AR","CL","CO","MX","KR","TW","SG"];
@@ -1137,7 +1138,8 @@ function handleMessage(msg) {
     }
   }
   else if (msg.type === 'results') {
-    const data = filterRowsByRegion(msg.data || []);
+    const allowedTypes = selectedFeatures;
+    const data = filterRowsByRegion((msg.data || []).filter(r => allowedTypes.has(r.type_id)));
     // Count results by source
     data.forEach(r => {
       if (r.source) {
@@ -1180,7 +1182,8 @@ function handleMessage(msg) {
     }
   }
   else if (msg.type === 'final') {
-    results = filterRowsByRegion(msg.data || []);
+    const allowedTypes = selectedFeatures;
+    results = filterRowsByRegion((msg.data || []).filter(r => allowedTypes.has(r.type_id)));
     clearMapMarkers();
     updateMapCenter();
     addMarkersToMap(results);
